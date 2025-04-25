@@ -1,57 +1,57 @@
+// app/voice-agents/page.tsx
+'use client'
+import { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { PhoneCallIcon, PlusIcon, SearchIcon, SettingsIcon, PlayIcon, PauseIcon, WandIcon } from "lucide-react"
 import Link from "next/link"
+import { Badge } from "@/components/ui/badge";
 
-const voiceAgents = [
-  {
-    id: 1,
-    name: "Appointment Scheduler",
-    description: "Books appointments and confirms scheduling details",
-    status: "Active",
-    calls: 1248,
-    successRate: "87%",
-    lastModified: "2 days ago",
-    model: "GPT-4o",
-    voice: "Female Voice 1",
-  },
-  {
-    id: 2,
-    name: "Lead Qualifier",
-    description: "Qualifies leads by asking key questions about needs and budget",
-    status: "Active",
-    calls: 2156,
-    successRate: "79%",
-    lastModified: "5 days ago",
-    model: "Claude 3 Opus",
-    voice: "Male Voice 2",
-  },
-  {
-    id: 3,
-    name: "Follow-up Agent",
-    description: "Follows up with leads who haven't responded",
-    status: "Paused",
-    calls: 876,
-    successRate: "65%",
-    lastModified: "1 week ago",
-    model: "GPT-4o",
-    voice: "Female Voice 2",
-  },
-  {
-    id: 4,
-    name: "Customer Support",
-    description: "Handles basic customer inquiries and support requests",
-    status: "Draft",
-    calls: 0,
-    successRate: "N/A",
-    lastModified: "3 hours ago",
-    model: "Claude 3 Sonnet",
-    voice: "Neutral Voice",
-  },
-]
+interface Agent {
+  _id: string;
+  name: string;
+  description: string;
+  status: string;
+  calls: number;
+  successRate: string;
+  lastModified: string;
+  model: string;
+  voice: string;
+}
 
 export default function VoiceAgentsPage() {
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchAgents = async () => {
+      try {
+        const response = await fetch('/api/agents'); // Use relative URL
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setAgents(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAgents();
+  }, []);
+
+  if (isLoading) {
+    return <div>Loading agents...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-50 flex h-16 items-center gap-4 border-b bg-background px-6">
@@ -83,10 +83,7 @@ export default function VoiceAgentsPage() {
       <main className="flex-1 p-6">
         <div className="flex flex-col gap-4 md:gap-8">
           <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold tracking-tight">Voice Agents</h1>
-
-             
-
+            <h1 className="text-3xl font-bold tracking-tight">Voice Agents</h1>
           </div>
           <Card className="mt-4 flex items-center rounded-lg border-2 border-dashed p-6 text-center hover:border-primary">
             <div className="mx-auto flex max-w-xs flex-col items-center gap-2">
@@ -109,8 +106,8 @@ export default function VoiceAgentsPage() {
             </div>
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {voiceAgents.map((agent) => (
-              <Card key={agent.id} className="flex flex-col">
+            {agents.map((agent) => (
+              <Card key={agent._id} className="flex flex-col">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-xl">{agent.name}</CardTitle>
@@ -128,7 +125,7 @@ export default function VoiceAgentsPage() {
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>
                       <p className="text-muted-foreground">Total Calls</p>
-                      <p className="font-medium">{agent.calls.toLocaleString()}</p>
+                      <p className="font-medium">{agent.calls?.toLocaleString()}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Success Rate</p>
@@ -147,7 +144,7 @@ export default function VoiceAgentsPage() {
                 </CardContent>
                 <CardFooter className="flex gap-2">
                   <Button variant="outline" size="sm" className="flex-1" asChild>
-                    <Link href={`/voice-agents/${agent.id}`}>
+                    <Link href={`/voice-agents/${agent._id}`}>
                       <SettingsIcon className="mr-2 h-4 w-4" />
                       Configure
                     </Link>
@@ -170,6 +167,5 @@ export default function VoiceAgentsPage() {
         </div>
       </main>
     </div>
-  )
+  );
 }
-import { Badge } from "@/components/ui/badge";
